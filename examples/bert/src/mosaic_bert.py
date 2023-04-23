@@ -110,8 +110,7 @@ def create_mosaic_bert_mlm(pretrained_model_name: str = 'bert-base-uncased',
         model.gradient_checkpointing_enable()  # type: ignore
 
     # setup the tokenizer
-    if tokenizer_name == CerebrateArEnTokenizerBert:
-        tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
+    tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
 
     metrics = [
         LanguageCrossEntropy(ignore_index=-100,
@@ -259,8 +258,7 @@ def create_mosaic_bert_classification(
         model.gradient_checkpointing_enable()  # type: ignore
 
     # setup the tokenizer
-    if tokenizer_name == CerebrateArEnTokenizerBert:
-        tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
+    tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
 
     if num_labels == 1:
         # Metrics for a regression model
