@@ -19,6 +19,8 @@ from torchmetrics.regression.spearman import SpearmanCorrCoef
 from examples.bert.src.bert_layers import (BertForMaskedLM,
                                            BertForSequenceClassification)
 from examples.bert.src.configuration_bert import BertConfig
+from examples.bert.src.cerebrate_tokenizer import CerebrateArEnTokenizerBert
+
 
 all = ['create_mosaic_bert_mlm', 'create_mosaic_bert_classification']
 
@@ -108,11 +110,8 @@ def create_mosaic_bert_mlm(pretrained_model_name: str = 'bert-base-uncased',
         model.gradient_checkpointing_enable()  # type: ignore
 
     # setup the tokenizer
-    if tokenizer_name:
-        tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer_name)
-    else:
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
-            pretrained_model_name)
+    if tokenizer_name == CerebrateArEnTokenizerBert:
+        tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
 
     metrics = [
         LanguageCrossEntropy(ignore_index=-100,
@@ -260,11 +259,8 @@ def create_mosaic_bert_classification(
         model.gradient_checkpointing_enable()  # type: ignore
 
     # setup the tokenizer
-    if tokenizer_name:
-        tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer_name)
-    else:
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
-            pretrained_model_name)
+    if tokenizer_name == CerebrateArEnTokenizerBert:
+        tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
 
     if num_labels == 1:
         # Metrics for a regression model
