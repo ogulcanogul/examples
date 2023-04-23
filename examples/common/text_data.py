@@ -62,6 +62,7 @@ class StreamingTextDataset(StreamingDataset):
     """
 
     def __init__(self,
+                 tokenizer_name: str,
                  max_seq_len: int,
                  streams: Optional[Sequence[Stream]] = None,
                  remote: Optional[str] = None,
