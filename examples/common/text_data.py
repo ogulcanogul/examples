@@ -14,7 +14,7 @@ from omegaconf import DictConfig
 from omegaconf import OmegaConf as om
 from streaming import Stream, StreamingDataset
 from torch.utils.data import DataLoader
-
+from examples.bert.src.cerebrate_tokenizer import CerebrateArEnTokenizerBert
 
 class StreamingTextDataset(StreamingDataset):
     """Generic text dataset using MosaicML's StreamingDataset.
@@ -62,7 +62,6 @@ class StreamingTextDataset(StreamingDataset):
     """
 
     def __init__(self,
-                 tokenizer_name: str,
                  max_seq_len: int,
                  streams: Optional[Sequence[Stream]] = None,
                  remote: Optional[str] = None,
@@ -128,9 +127,7 @@ class StreamingTextDataset(StreamingDataset):
         # Build tokenizer
         os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            tokenizer_name)
-
+        self.tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
         # suppress warnings when using longer 'max_seq_len'
         self.tokenizer.model_max_length = int(1e30)
 
