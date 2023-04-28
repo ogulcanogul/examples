@@ -210,8 +210,6 @@ def create_mosaic_bert_semantic_search(pretrained_model_name: str = 'bert-base-u
     if 'alibi_starting_size' not in model_config:
         model_config['alibi_starting_size'] = 512
 
-    model_config['num_labels'] = num_labels
-
     if not pretrained_model_name:
         pretrained_model_name = 'bert-base-uncased'
 
