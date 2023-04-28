@@ -434,15 +434,15 @@ class StreamingTextDatasetSemanticSearch(StreamingDataset):
                               padding='max_length',
                               max_length=self.max_seq_len)
 
-        query_tokens.data['input_ids'].extend(positive_tokens.data['input_ids'])
-        query_tokens.data['input_ids'].extend(negative_tokens.data['input_ids'])
-        query_tokens.data['token_type_ids'].extend(positive_tokens.data['token_type_ids'])
-        query_tokens.data['token_type_ids'].extend(negative_tokens.data['token_type_ids'])
-        query_tokens.data['attention_mask'].extend(positive_tokens.data['attention_mask'])
-        query_tokens.data['attention_mask'].extend(negative_tokens.data['attention_mask'])
-        query_tokens.data['input_ids'] = np.array(query_tokens.data['input_ids'])
-        query_tokens.data['token_type_ids'] = np.array(query_tokens.data['token_type_ids'])
-        query_tokens.data['attention_mask'] = np.array(query_tokens.data['attention_mask'])
+        query_tokens['input_ids'].extend(positive_tokens['input_ids'])
+        query_tokens['input_ids'].extend(negative_tokens['input_ids'])
+        query_tokens['token_type_ids'].extend(positive_tokens['token_type_ids'])
+        query_tokens['token_type_ids'].extend(negative_tokens['token_type_ids'])
+        query_tokens['attention_mask'].extend(positive_tokens['attention_mask'])
+        query_tokens['attention_mask'].extend(negative_tokens['attention_mask'])
+        query_tokens['input_ids'] = np.array(query_tokens['input_ids'])
+        query_tokens['token_type_ids'] = np.array(query_tokens['token_type_ids'])
+        query_tokens['attention_mask'] = np.array(query_tokens['attention_mask'])
 
         return query_tokens
 

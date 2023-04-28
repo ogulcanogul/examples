@@ -6,6 +6,7 @@ import sys
 from typing import Optional, cast
 
 from composer import Trainer
+from composer.core import DataSpec
 from composer.utils import reproducibility
 from omegaconf import DictConfig
 from omegaconf import OmegaConf as om
@@ -93,6 +94,13 @@ def main(cfg: DictConfig,
 
     if cfg.get('run_name') is None:
         cfg.run_name = os.environ.get('COMPOSER_RUN_NAME', 'bert')
+
+    # train_data_spec = DataSpec(
+    #     dataloader=train_loader,
+    #     get_num_tokens_in_batch= 1024*3*800,
+    #
+    # )
+
 
     # Build the Trainer
     trainer = Trainer(
