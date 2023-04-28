@@ -1174,7 +1174,9 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
         query_embedding = self.embedding_dense(query_pooled_output)
         query_embedding = torch.nn.functional.normalize(query_embedding, p=2, dim=1)
 
-
+        print(input_ids.size())
+        print(attention_mask.size())
+        print(token_type_ids.size())
         positive_outputs = self.bert(
             input_ids[:, 1024:2048],
             attention_mask=attention_mask[:, 1024:2048],
