@@ -56,8 +56,39 @@ try:
     from examples.bert.src.flash_attn_triton import flash_attn_qkvpacked_func
 except ImportError as e:
     flash_attn_qkvpacked_func = None
-
+from transformers.utils import ModelOutput
+from dataclasses import dataclass
 logger = logging.getLogger(__name__)
+
+
+
+@dataclass
+class SemanticSearchOutput(ModelOutput):
+    """
+    Base class for outputs of sentence classification models.
+
+    Args:
+        loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
+            Classification (or regression if config.num_labels==1) loss.
+        logits (`torch.FloatTensor` of shape `(batch_size, config.num_labels)`):
+            Classification (or regression if config.num_labels==1) scores (before SoftMax).
+        hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+            Tuple of `torch.FloatTensor` (one for the output of the embeddings, if the model has an embedding layer, +
+            one for the output of each layer) of shape `(batch_size, sequence_length, hidden_size)`.
+
+            Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
+        attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+            Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+            sequence_length)`.
+
+            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+            heads.
+    """
+
+    loss: Optional[torch.FloatTensor] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    attentions: Optional[Tuple[torch.FloatTensor]] = None
+
 
 
 class BertEmbeddings(nn.Module):
@@ -1050,6 +1081,160 @@ class BertForSequenceClassification(BertPreTrainedModel):
             hidden_states=None,
             attentions=None,
         )
+
+
+
+class BertForSemanticSearchModel(BertPreTrainedModel):
+    """Bert Model transformer with a sequence classification/regression head.
+
+    This head is just a linear layer on top of the pooled output. Used for,
+    e.g., GLUE tasks.
+    """
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.embedding_dimension = config.embedding_dimension
+        self.config = config
+
+        self.bert = BertModel(config)
+        self.embedding_dense = nn.Linear(config.hidden_size, config.embedding_dimension)
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    @classmethod
+    def from_composer(cls,
+                      pretrained_checkpoint,
+                      state_dict=None,
+                      cache_dir=None,
+                      from_tf=False,
+                      config=None,
+                      *inputs,
+                      **kwargs):
+        """Load from pre-trained."""
+        model = cls(config, *inputs, **kwargs)
+        if from_tf:
+            raise ValueError(
+                'Mosaic BERT does not support loading TensorFlow weights.')
+
+        state_dict = torch.load(pretrained_checkpoint)
+        # If the state_dict was saved after wrapping with `composer.HuggingFaceModel`, it takes on the `model` prefix
+        consume_prefix_in_state_dict_if_present(state_dict, prefix='model.')
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict,
+                                                              strict=False)
+
+        if len(missing_keys) > 0:
+            logger.warning(
+                f"Found these missing keys in the checkpoint: {', '.join(missing_keys)}"
+            )
+        if len(unexpected_keys) > 0:
+            logger.warning(
+                f"Found these unexpected keys in the checkpoint: {', '.join(unexpected_keys)}"
+            )
+
+        return model
+
+    def forward(
+        self,
+        input_ids: Optional[torch.Tensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        token_type_ids: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.Tensor] = None,
+        head_mask: Optional[torch.Tensor] = None,
+        inputs_embeds: Optional[torch.Tensor] = None,
+        labels: Optional[torch.Tensor] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple[torch.Tensor], SequenceClassifierOutput]:
+        # labels (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
+        # Labels for computing the sequence classification/regression loss.
+        # Indices should be in `[0, ..., config.num_labels - 1]`.
+        # If `config.num_labels == 1` a regression loss is computed
+        # (mean-square loss). If `config.num_labels > 1` a classification loss
+        # is computed (cross-entropy).
+
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        query_outputs = self.bert(
+            input_ids[0],
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        query_pooled_output = query_outputs[1]
+
+        #pooled_output = self.dropout(pooled_output)
+        query_embedding = self.embedding_dense(query_pooled_output)
+        query_embedding = torch.nn.functional.normalize(query_embedding, p=2, dim=1)
+
+
+        positive_outputs = self.bert(
+            input_ids[1],
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        positive_pooled_output = positive_outputs[1]
+
+        #pooled_output = self.dropout(pooled_output)
+        positive_embedding = self.embedding_dense(positive_pooled_output)
+        positive_embedding = torch.nn.functional.normalize(positive_embedding, p=2, dim=1)
+
+
+        negative_outputs = self.bert(
+            input_ids[2],
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        negative_pooled_output = negative_outputs[1]
+
+        #pooled_output = self.dropout(pooled_output)
+        negative_embedding = self.embedding_dense(negative_pooled_output)
+        negative_embedding = torch.nn.functional.normalize(negative_embedding, p=2, dim=1)
+
+        loss_fct = nn.CrossEntropyLoss()
+
+        embeddings_all = torch.cat([positive_embedding, negative_embedding])
+
+        ### Compute similarity scores 512 x 1024
+        scores = torch.mm(query_embedding, embeddings_all.transpose(0, 1)) * 20
+
+        ### Compute cross-entropy loss
+        labels = torch.tensor(range(len(scores)), dtype=torch.long,
+                              device=query_embedding.device)  # Example a[i] should match with b[i]
+
+        ## One-way loss
+        loss = loss_fct(scores, labels)
+
+
+
+        return SequenceClassifierOutput(
+            loss=loss,
+            logits=scores,
+            hidden_states=None,
+            attentions=None,
+        )
+
 
 
 class BertForMultipleChoice(BertPreTrainedModel):

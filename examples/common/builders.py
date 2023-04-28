@@ -23,7 +23,7 @@ from examples.common.optim import (DecoupledAdaLRLion, DecoupledClipLion,
                                    DecoupledLionW)
 from examples.common.resumption_callbacks import GlobalLRScaling, LayerFreezing
 from examples.common.scheduled_gc_callback import ScheduledGarbageCollector
-from examples.common.text_data import build_text_dataloader
+from examples.common.text_data import build_text_dataloader, build_text_dataloader_for_semantic_search
 
 
 def build_callback(name, kwargs):
@@ -130,6 +130,9 @@ def build_dataloader(cfg, device_batch_size):
         return build_text_dataloader(cfg, device_batch_size)
     else:
         raise ValueError(f'Not sure how to build dataloader with config: {cfg}')
+
+def build_dataloader_semantic_search(cfg, device_batch_size):
+    return build_text_dataloader_for_semantic_search(cfg, device_batch_size)
 
 
 def build_icl_evaluators(cfg, tokenizer):
