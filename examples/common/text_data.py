@@ -434,12 +434,12 @@ class StreamingTextDatasetSemanticSearch(StreamingDataset):
                               padding='max_length',
                               max_length=self.max_seq_len)
 
-        query_tokens['data']['input_ids'].extend(positive_tokens['data']['input_ids'])
-        query_tokens['data']['input_ids'].extend(negative_tokens['data']['input_ids'])
-        query_tokens['data']['token_type_ids'].extend(positive_tokens['data']['token_type_ids'])
-        query_tokens['data']['token_type_ids'].extend(negative_tokens['data']['token_type_ids'])
-        query_tokens['data']['attention_mask'].extend(positive_tokens['data']['attention_mask'])
-        query_tokens['data']['attention_mask'].extend(negative_tokens['data']['attention_mask'])
+        query_tokens.data['input_ids'].extend(positive_tokens.data['input_ids'])
+        query_tokens.data['input_ids'].extend(negative_tokens.data['input_ids'])
+        query_tokens.data['token_type_ids'].extend(positive_tokens.data['token_type_ids'])
+        query_tokens.data['token_type_ids'].extend(negative_tokens.data['token_type_ids'])
+        query_tokens.data['attention_mask'].extend(positive_tokens.data['attention_mask'])
+        query_tokens.data['attention_mask'].extend(negative_tokens.data['attention_mask'])
         return query_tokens
 
     def _read_binary_tokenized_sample(self, sample):
