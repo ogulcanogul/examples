@@ -1157,9 +1157,9 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         query_outputs = self.bert(
-            input_ids[0],
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
+            input_ids[:, 0:1024],
+            attention_mask=attention_mask[0:1024],
+            token_type_ids=token_type_ids[0:1024],
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -1176,9 +1176,9 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
 
 
         positive_outputs = self.bert(
-            input_ids[1],
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
+            input_ids[:, 1024:2048],
+            attention_mask=attention_mask[:, 1024:2048],
+            token_type_ids=token_type_ids[:, 1024:2048],
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -1195,9 +1195,9 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
 
 
         negative_outputs = self.bert(
-            input_ids[2],
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
+            input_ids[:, 2048:],
+            attention_mask=attention_mask[:, 2048:],
+            token_type_ids=token_type_ids[:, 2048:],
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
