@@ -237,7 +237,8 @@ def create_mosaic_bert_semantic_search(pretrained_model_name: str = 'bert-base-u
 
     hf_model = HuggingFaceModel(model=model,
                                 tokenizer=tokenizer,
-                                use_logits=True)
+                                use_logits=True,
+                                metrics=None)
 
     # Padding for divisibility by 8
     # We have to do it again here because wrapping by HuggingFaceModel changes it
