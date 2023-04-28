@@ -440,6 +440,10 @@ class StreamingTextDatasetSemanticSearch(StreamingDataset):
         query_tokens.data['token_type_ids'].extend(negative_tokens.data['token_type_ids'])
         query_tokens.data['attention_mask'].extend(positive_tokens.data['attention_mask'])
         query_tokens.data['attention_mask'].extend(negative_tokens.data['attention_mask'])
+        query_tokens.data['input_ids'] = np.array(query_tokens.data['input_ids'])
+        query_tokens.data['token_type_ids'] = np.array(query_tokens.data['token_type_ids'])
+        query_tokens.data['attention_mask'] = np.array(query_tokens.data['attention_mask'])
+
         return query_tokens
 
     def _read_binary_tokenized_sample(self, sample):
