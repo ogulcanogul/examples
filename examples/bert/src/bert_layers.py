@@ -41,6 +41,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from einops import rearrange
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 from transformers.activations import ACT2FN
@@ -1214,25 +1215,32 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
         negative_embedding = self.embedding_dense(negative_pooled_output)
         negative_embedding = torch.nn.functional.normalize(negative_embedding, p=2, dim=1)
 
-        loss_fct = nn.CrossEntropyLoss()
+        positive_distance = F.pairwise_distance(query_embedding, positive_embedding, p=2)
+        negative_distance = F.pairwise_distance(query_embedding, negative_embedding, p=2)
 
-        embeddings_all = torch.cat([positive_embedding, negative_embedding])
+        distance_difference = positive_distance - negative_distance
 
-        ### Compute similarity scores 512 x 1024
-        scores = torch.mm(query_embedding, embeddings_all.transpose(0, 1)) * 20
+        loss = F.relu(distance_difference + self.triplet_margin)
 
-        ### Compute cross-entropy loss
-        labels = torch.tensor(range(len(scores)), dtype=torch.long,
-                              device=query_embedding.device)  # Example a[i] should match with b[i]
-
-        ## One-way loss
-        loss = loss_fct(scores, labels)
+        # loss_fct = nn.CrossEntropyLoss()
+        #
+        # embeddings_all = torch.cat([positive_embedding, negative_embedding])
+        #
+        # ### Compute similarity scores 512 x 1024
+        # scores = torch.mm(query_embedding, embeddings_all.transpose(0, 1)) * 20
+        #
+        # ### Compute cross-entropy loss
+        # labels = torch.tensor(range(len(scores)), dtype=torch.long,
+        #                       device=query_embedding.device)  # Example a[i] should match with b[i]
+        #
+        # ## One-way loss
+        # loss = loss_fct(scores, labels)
 
 
 
         return SequenceClassifierOutput(
-            loss=loss,
-            logits=scores,
+            loss=loss.float(),
+            logits=distance_difference,
             hidden_states=None,
             attentions=None
         )
