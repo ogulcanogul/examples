@@ -1234,7 +1234,7 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
             loss=loss,
             logits=scores,
             hidden_states=None,
-            attentions=None,
+            attentions=None
         )
 
 

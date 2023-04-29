@@ -10,7 +10,6 @@ from composer.core import DataSpec
 from composer.utils import reproducibility
 from omegaconf import DictConfig
 from omegaconf import OmegaConf as om
-
 from examples.bert.src.hf_bert import create_hf_bert_mlm
 from examples.bert.src.mosaic_bert import create_mosaic_bert_mlm, create_mosaic_bert_semantic_search
 from examples.common.builders import (build_algorithm, build_callback,

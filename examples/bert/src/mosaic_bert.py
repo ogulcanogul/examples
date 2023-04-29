@@ -21,6 +21,51 @@ from examples.bert.src.bert_layers import (BertForMaskedLM,
 from examples.bert.src.configuration_bert import BertConfig
 from examples.bert.src.cerebrate_tokenizer import CerebrateArEnTokenizerBert
 
+from torchmetrics import Metric
+import torch
+
+class EvaluationLoss(Metric):
+    """Computes accuracy with support for masked indices.
+
+    Adds metric state variables:
+        correct (float): The number of instances where the prediction masked the target.
+        total (float): The number of total instances that were predicted.
+
+    Args:
+        ignore_index (int): The class index to ignore. Default: -100.
+        dist_sync_on_step (bool, optional): Synchronize metric state across processes at
+            each forward() before returning the value at the step. Default: ``False``.
+    """
+
+    # Make torchmetrics call update only once
+    full_state_update = False
+
+    def __init__(self, ignore_index: int = -100, dist_sync_on_step: bool = False):
+        # state from multiple processes
+        super().__init__(dist_sync_on_step=dist_sync_on_step)
+        self.ignore_index = ignore_index
+
+        self.add_state('correct', default=torch.tensor(0), dist_reduce_fx='sum')
+        self.add_state('total', default=torch.tensor(0), dist_reduce_fx='sum')
+
+    def update(self, preds: torch.Tensor, target: torch.Tensor):
+        # predictions is a batch x num_classes tensor, take the argmax to get class indices
+        loss_fct = torch.nn.CrossEntropyLoss()
+
+        ### Compute cross-entropy loss
+        labels = torch.tensor(range(len(preds)), dtype=torch.long,
+                              device=preds.device)  # Example a[i] should match with b[i]
+
+        ## One-way loss
+        loss = loss_fct(preds, labels)
+
+        self.correct += loss
+        self.total += preds.size()[0]
+
+    def compute(self):
+
+        return self.correct.float() / self.totald
+
 
 all = ['create_mosaic_bert_mlm', 'create_mosaic_bert_classification']
 
@@ -231,6 +276,11 @@ def create_mosaic_bert_semantic_search(pretrained_model_name: str = 'bert-base-u
     if gradient_checkpointing:
         model.gradient_checkpointing_enable()  # type: ignore
 
+
+    eval_metrics = [
+        EvaluationLoss(ignore_index=-100)
+    ]
+
     # setup the tokenizer
     tokenizer = CerebrateArEnTokenizerBert.from_pretrained('Ogul/CerebrateArEnTokenizer')
 
@@ -238,7 +288,7 @@ def create_mosaic_bert_semantic_search(pretrained_model_name: str = 'bert-base-u
     hf_model = HuggingFaceModel(model=model,
                                 tokenizer=tokenizer,
                                 use_logits=False,
-                                eval_metrics=None,
+                                eval_metrics=eval_metrics,
                                 metrics=None)
 
     # Padding for divisibility by 8
