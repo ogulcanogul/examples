@@ -48,12 +48,15 @@ class EvaluationLoss(Metric):
         self.add_state('correct', default=torch.tensor(0), dist_reduce_fx='sum')
         self.add_state('total', default=torch.tensor(0), dist_reduce_fx='sum')
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor):
+    def update(self, preds, target):
         # predictions is a batch x num_classes tensor, take the argmax to get class indices
+
+        preds = preds['logits']
         loss_fct = torch.nn.CrossEntropyLoss()
 
         ### Compute cross-entropy loss
-        labels = torch.tensor(range(len(preds)), dtype=torch.long)  # Example a[i] should match with b[i]
+        labels = torch.tensor(range(len(preds)), dtype=torch.long,
+                              device=preds.device)  # Example a[i] should match with b[i]
 
         ## One-way loss
         loss = loss_fct(preds, labels)
