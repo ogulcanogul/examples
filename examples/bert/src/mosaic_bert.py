@@ -53,7 +53,7 @@ class EvaluationLoss(Metric):
 
         loss = preds['loss']
         preds = preds['logits']
-        self.correct += loss
+        self.correct += torch.sum(loss)
         self.total += preds.size()[0]
 
     def compute(self):
