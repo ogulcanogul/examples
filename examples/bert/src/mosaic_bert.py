@@ -66,7 +66,7 @@ class EvaluationLoss(Metric):
 
     def compute(self):
 
-        return self.correct.float()
+        return self.correct.float()/self.total
 
 
 all = ['create_mosaic_bert_mlm', 'create_mosaic_bert_classification']
