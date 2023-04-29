@@ -52,6 +52,7 @@ class EvaluationLoss(Metric):
         # predictions is a batch x num_classes tensor, take the argmax to get class indices
 
         loss = preds['loss']
+        preds = preds['logits']
         self.correct += loss
         self.total += preds.size()[0]
 
