@@ -53,8 +53,7 @@ class EvaluationLoss(Metric):
         loss_fct = torch.nn.CrossEntropyLoss()
 
         ### Compute cross-entropy loss
-        labels = torch.tensor(range(len(preds)), dtype=torch.long,
-                              device=preds.device)  # Example a[i] should match with b[i]
+        labels = torch.tensor(range(len(preds)), dtype=torch.long)  # Example a[i] should match with b[i]
 
         ## One-way loss
         loss = loss_fct(preds, labels)
