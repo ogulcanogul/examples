@@ -51,7 +51,7 @@ class EvaluationLoss(Metric):
     def update(self, preds, target):
         # predictions is a batch x num_classes tensor, take the argmax to get class indices
 
-        preds = preds['loss']
+        loss = preds['loss']
         self.correct += loss
         self.total += preds.size()[0]
 
