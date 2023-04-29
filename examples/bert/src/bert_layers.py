@@ -1173,7 +1173,7 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
 
         #pooled_output = self.dropout(pooled_output)
         query_embedding = self.embedding_dense(query_pooled_output)
-        #query_embedding = torch.nn.functional.normalize(query_embedding, p=2, dim=1)
+        query_embedding = torch.nn.functional.normalize(query_embedding, p=2, dim=1)
 
         # print(input_ids.size())
         # print(attention_mask.size())
@@ -1194,7 +1194,7 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
 
         #pooled_output = self.dropout(pooled_output)
         positive_embedding = self.embedding_dense(positive_pooled_output)
-        #positive_embedding = torch.nn.functional.normalize(positive_embedding, p=2, dim=1)
+        positive_embedding = torch.nn.functional.normalize(positive_embedding, p=2, dim=1)
 
 
         negative_outputs = self.bert(
@@ -1213,14 +1213,14 @@ class BertForSemanticSearchModel(BertPreTrainedModel):
 
         #pooled_output = self.dropout(pooled_output)
         negative_embedding = self.embedding_dense(negative_pooled_output)
-        #negative_embedding = torch.nn.functional.normalize(negative_embedding, p=2, dim=1)
+        negative_embedding = torch.nn.functional.normalize(negative_embedding, p=2, dim=1)
 
         positive_distance = F.pairwise_distance(query_embedding, positive_embedding, p=2)
         negative_distance = F.pairwise_distance(query_embedding, negative_embedding, p=2)
 
         distance_difference = positive_distance - negative_distance
 
-        loss = F.relu(distance_difference + 5)
+        loss = F.relu(distance_difference + 0.1)
 
         # loss_fct = nn.CrossEntropyLoss()
         #
